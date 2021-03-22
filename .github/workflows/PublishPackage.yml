@@ -38,8 +38,8 @@ jobs:
         if: steps.publish.outputs.type != 'none'
         run: |
           cd ${{ github.workspace }}
-          echo "${PACKAGE_NAME}.meta" > metaList
-          find ${PACKAGE_NAME}/ -name \*.meta >> metaList
+          echo "Assets/${PACKAGE_NAME}.meta" > metaList
+          find "Assets/${PACKAGE_NAME}/" -name \*.meta >> metaList
           cd $HOME
           mkdir output
       - id: package
