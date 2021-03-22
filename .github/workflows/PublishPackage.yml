@@ -18,7 +18,6 @@ jobs:
           token: ${{ secrets.NPM_TOKEN }}
           registry: http://184.168.126.153:4873/
           package: ${{ github.workspace }}/Assets/MCU_Common/package.json
-          dry-run: true
       - id: tag
         name: Create a Release of Unity Package
         if: steps.publish.outputs.type != 'none'
