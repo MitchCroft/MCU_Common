@@ -41,8 +41,8 @@ jobs:
         name: Create Unity Package
         if: steps.publish.outputs.type != 'none'
         uses: pCYSl5EDgo/create-unitypackage@v1
-          package-path: 'output/MCU_Common.unitypackage'
           include-files: metaList
+          package-path: 'output/MCU_Common.unitypackage'
       - name: Upload Package Data
         if: steps.publish.outputs.type != 'none' && steps.publish.outputs.dryRun == false
         uses: actions/upload-release-asset@v1
