@@ -41,7 +41,7 @@ jobs:
         name: Create Unity Package
         if: steps.publish.outputs.type != 'none'
         uses: pCYSl5EDgo/create-unitypackage@v1
-          package-path: ./output/MCU_Common${{ steps.publish.outputs.version }}.unitypackage
+          package-path: format('/output/MCU_Common{0}.unitypackage', ${{ steps.publish.outputs.version }})
           include-files: metaList
       - name: Upload Package Data
         if: steps.publish.outputs.type != 'none' && steps.publish.outputs.dryRun == false
@@ -50,6 +50,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.tag.outputs.upload_url }}
-          asset_path: ./output/MCU_Common${{ steps.publish.outputs.version }}.unitypackage
+          asset_path: format('/output/MCU_Common{0}.unitypackage', ${{ steps.publish.outputs.version }})
           asset_name: MCU_Common${{ steps.publish.outputs.version }}.unitypackage
           asset_content_type: application/gzip
