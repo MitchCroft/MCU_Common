@@ -34,16 +34,13 @@ jobs:
           upm_package_path: ${{ env.DIRECTORY_PATH }}/
           upm_tag_prefix: v
           draft: ${{ env.DRY_RUN }}
-      - name: Copy Files for Packaging
-        if: steps.publish.outputs.type != 'none'
-        run: |
-          rsync -a "${DIRECTORY_PATH}/." "/${PACKAGE_NAME}/"
-          cp "${DIRECTORY_PATH}.meta" "${PACKAGE_NAME}.meta"
       - name: Identify Meta for Package
         if: steps.publish.outputs.type != 'none'
         run: |
+          cd ${{ github.workspace }}
           echo "${PACKAGE_NAME}.meta" > metaList
           find ${PACKAGE_NAME}/ -name \*.meta >> metaList
+          cd $HOME
           mkdir output
       - id: package
         name: Create Unity Package
@@ -51,7 +48,8 @@ jobs:
         uses: pCYSl5EDgo/create-unitypackage@v1
         with:
           package-path: './output/${{ env.PACKAGE_NAME }}${{ steps.publish.outputs.version }}.unitypackage'
-          include-files: metaList
+          include-files: "${{ github.workspace }}/metaList"
+          project-folder: ${{ github.workspace }}
       - name: Upload Package Data
         if: steps.publish.outputs.type != 'none'
         uses: actions/upload-release-asset@v1
