@@ -34,11 +34,16 @@ jobs:
           upm_package_path: ${{ env.DIRECTORY_PATH }}/
           upm_tag_prefix: v
           draft: ${{ env.DRY_RUN }}
+      - name: Copy Files for Packaging
+        if: steps.publish.outputs.type != 'none'
+        run: |
+          rsync -a "${DIRECTORY_PATH}/." "/${PACKAGE_NAME}/"
+          cp "${DIRECTORY_PATH}.meta" "${PACKAGE_NAME}.meta"
       - name: Identify Meta for Package
         if: steps.publish.outputs.type != 'none'
         run: |
-          echo "${DIRECTORY_PATH}.meta" > metaList
-          find ${DIRECTORY_PATH}/ -name \*.meta >> metaList
+          echo "${PACKAGE_NAME}.meta" > metaList
+          find ${PACKAGE_NAME}/ -name \*.meta >> metaList
           mkdir output
       - id: package
         name: Create Unity Package
