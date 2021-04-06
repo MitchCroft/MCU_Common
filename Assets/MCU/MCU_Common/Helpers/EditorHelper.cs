@@ -96,12 +96,15 @@ namespace MCU.Helpers {
         /// <param name="line">The standard line within the master rect that is to be retrieved</param>
         /// <param name="indent">The level of indentation that is to be added onto the current position</param>
         /// <param name="lineCount">The number of standard lines that this operation is to cover</param>
+        /// <param name="xOffset">A normalised 0-1 scale additional indent as a percentage of the overall width</param>
+        /// <param name="widthOffset">A normalised 0-1 scale width as a percentage of the overall width evaluated</param>
         /// <returns>Returns a sized and positioned sub-rect based off of the master</returns>
-        public static Rect GetSubPositionRect(Rect master, int line, int indent = 0, int lineCount = 1) {
+        public static Rect GetSubPositionRect(Rect master, int line, int indent = 0, int lineCount = 1, float xOffset = 0f, float widthOffset = 1f) {
+            float width = (master.width - IndentPerLevel * indent);
             return new Rect(
-                master.x + IndentPerLevel * indent,
+                (master.x + IndentPerLevel * indent) + width * xOffset,
                 master.y + line * StandardLineVerticalTotal,
-                master.width - IndentPerLevel * indent,
+                width * widthOffset,
                 lineCount * StandardLineVerticalTotal
             );
         }
@@ -529,6 +532,27 @@ namespace MCU.Helpers {
                     found.Add(asset);
             }
             return found;
+        }
+
+        /// <summary>
+        /// Iterate over all assets of a specified type
+        /// </summary>
+        /// <typeparam name="T">The tpye of assets to search for</typeparam>
+        /// <returns>Iterates over all assets of the specified type that could be found</returns>
+        public static IEnumerator<T> ForAssetsOfType<T>() where T : UnityEngine.Object {
+            // Find the GUIDs of all of the assets of the specified type
+            string[] ids = AssetDatabase.FindAssets("t:" + typeof(T).Name);
+
+            // Loop through and check all of the identified elements
+            T asset;
+            for (int i = 0; i < ids.Length; ++i) {
+                // Get the path of the object
+                string path = AssetDatabase.GUIDToAssetPath(ids[i]);
+
+                // Attempt to load the asset
+                if (asset = AssetDatabase.LoadAssetAtPath<T>(path))
+                    yield return asset;
+            }
         }
     }
 }
