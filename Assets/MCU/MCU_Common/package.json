@@ -1,14 +1,14 @@
 {
 	"name": "games.mitchcroft.mcucommon",
 	"displayName": "MCU Common",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"unity": "2018.3",
 	"engines": {
 		"unity": ">=2018.3"
 	},
 
 	"description": "Various helper objects, extensions and attributes that are commonly used between multiple packages/projects",
-	"keywords": [ "common", "attributes", "extensions", "helpers" ],
+	"keywords": [ "common", "attributes", "extensions", "helpers", "screens", "manager", "editor",  ],
 
 	"dependencies": {},
 
