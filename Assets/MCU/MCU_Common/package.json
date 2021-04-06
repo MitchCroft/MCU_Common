@@ -8,7 +8,7 @@
 	},
 
 	"description": "Various helper objects, extensions and attributes that are commonly used between multiple packages/projects",
-	"keywords": [ "common", "attributes", "extensions", "helpers", "screens", "manager", "editor",  ],
+	"keywords": [ "common", "attributes", "extensions", "helpers", "screens", "manager", "editor" ],
 
 	"dependencies": {},
 
