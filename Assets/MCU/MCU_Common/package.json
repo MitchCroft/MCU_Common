@@ -1,7 +1,7 @@
 {
 	"name": "games.mitchcroft.mcucommon",
 	"displayName": "MCU Common",
-	"version": "1.1.0",
+	"version": "1.1.1",
 	"unity": "2018.3",
 	"engines": {
 		"unity": ">=2018.3"

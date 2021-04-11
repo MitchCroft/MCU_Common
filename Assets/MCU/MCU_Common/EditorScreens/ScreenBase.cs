@@ -1,5 +1,4 @@
 #if UNITY_EDITOR
-using System;
 using System.Collections.Generic;
 
 namespace MCU.EditorScreens {
@@ -13,8 +12,8 @@ namespace MCU.EditorScreens {
         /// <summary>
         /// Raise a request to interested parties that the screen change states to the specified
         /// </summary>
-        /// <param name="state">The state that is to be changed to</param>
-        public delegate void ScreenChangeDel(Enum state);
+        /// <param name="state">The value whose hash will be converted into an ID of the state that is to be transitioned to</param>
+        public delegate void ScreenChangeDel(object state);
 
         /*----------Events----------*/
         //PUBLIC
@@ -30,13 +29,13 @@ namespace MCU.EditorScreens {
         /// <summary>
         /// Request that all listening parties change state to the specified
         /// </summary>
-        /// <param name="state">The state that is to be changed to</param>
-        protected void ChangeState(Enum state) { OnStateChange?.Invoke(state); }
+        /// <param name="state">The value whose hash will be converted into an ID of the state that is to be transitioned to</param>
+        protected void ChangeState(object state) { OnStateChange?.Invoke(state); }
 
         //PUBLIC
 
         /// <summary>
-        /// Raised when this screen is opened for display by a <see cref="ScreenStateMachine{TEnum}"/> object
+        /// Raised when this screen is opened for display by a <see cref="ScreenStateMachine"/> object
         /// </summary>
         /// <param name="data">The current collection of information that has been set for the state machine</param>
         public virtual void OnOpened(Dictionary<string, object> data) {}
