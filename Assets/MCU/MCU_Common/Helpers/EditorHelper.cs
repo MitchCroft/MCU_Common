@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System;
+using System.IO;
 using System.Reflection;
 using System.Collections;
 using System.Collections.Generic;
@@ -433,7 +434,7 @@ namespace MCU.Helpers {
             string[] segments = property.propertyPath.Split('.');
 
             // Cascade down the path
-            FieldInfo info;
+            FieldInfo info = null;
             for (int i = 0; i < segments.Length; ++i) {
                 // If this path segment is 'Array', skip over it
                 if (segments[i] == "Array" && i + 1 < segments.Length && segments[i + 1].StartsWith("data[")) {
@@ -460,14 +461,19 @@ namespace MCU.Helpers {
                 }
 
                 // Get the current field info
-                do {
-                    // Look for the field within the specified object
-                    info = type.GetField(segments[i], SEARCH_FLAGS);
+                if (i < segments.Length) {
+                    do {
+                        // Look for the field within the specified object
+                        info = type.GetField(segments[i], SEARCH_FLAGS);
 
-                    // If no field found, look in the base class
-                    if (info == null) type = type.BaseType;
-                    else break;
-                } while (type != null);
+                        // If no field found, look in the base class
+                        if (info == null) type = type.BaseType;
+                        else break;
+                    } while (type != null);
+                }
+
+                // If the root is a collection, use the underlying type
+                else break;
 
                 // If the info was found, update the current type
                 if (info != null) type = info.FieldType;
@@ -484,6 +490,64 @@ namespace MCU.Helpers {
         ////////////////////////////////////////////////////////////////////////////////////////////////////
         //////////-------------------------------Asset Manipulation-------------------------------//////////
         ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        /// <summary>
+        /// Create a new Scriptable Object asset within the project
+        /// </summary>
+        /// <typeparam name="T">The type of scriptable object that is to be created</typeparam>
+        /// <param name="defaultName">The default name that is to be assigned to the scriptable object</param>
+        /// <returns>Returns a reference to the Scriptable Object asset that was created</returns>
+        public static T CreateScriptableAsset<T>(string defaultName) where T : ScriptableObject { return CreateScriptableAsset(defaultName, typeof(T)) as T; }
+
+        /// <summary>
+        /// Create a new Scriptable Object asset within the project
+        /// </summary>
+        /// <param name="defaultName">The default name that is to be assigned to the scriptable object</param>
+        /// <param name="assetType">The type of scriptable object asset that is to be created</param>
+        /// <returns>Returns a reference to the Scriptable Object asset that was created</returns>
+        public static ScriptableObject CreateScriptableAsset(string defaultName, Type assetType) {
+            // Check that the type is valid
+            if (!typeof(ScriptableObject).IsAssignableFrom(assetType)) {
+                Debug.LogErrorFormat("Unable to create a Scriptable Object asset from type '{0}'. Type does not inherit ScriptableObject", assetType.FullName);
+                return null;
+            }
+
+            // Create a new instance of the type
+            ScriptableObject asset = ScriptableObject.CreateInstance(assetType);
+
+            // Get the path of the currently selected object
+            string path = AssetDatabase.GetAssetOrScenePath(Selection.activeObject);
+
+            // If there is no path, use the default
+            if (string.IsNullOrEmpty(path)) path = "Assets/";
+
+            // If the path has an extension (I.e is a file) get the directory
+            else if (!string.IsNullOrEmpty(Path.GetExtension(path)))
+                path = path.Replace(Path.GetFileName(path), string.Empty);
+
+            // If the default name is blank, use the type name
+            if (string.IsNullOrEmpty(defaultName))
+                defaultName = ObjectNames.NicifyVariableName(assetType.Name);
+
+            // Ensure that hte path is a unique asset path
+            path = AssetDatabase.GenerateUniqueAssetPath(string.Format("{0}/{1}.asset", path, defaultName));
+
+            // Create the asset as a file in the project
+            ProjectWindowUtil.CreateAsset(
+                asset,
+                path
+            );
+
+            // Save the changes to the asset database
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+
+            // Bring the new asset into focus
+            EditorUtility.FocusProjectWindow();
+            Selection.activeObject = asset;
+
+            return asset;
+        }
 
         /// <summary>
         /// Search through all of the assets within the project and retrieve the first of the specified type
@@ -512,7 +576,7 @@ namespace MCU.Helpers {
         /// <summary>
         /// Retrieve all of the assets of the specified type within the assets of this project
         /// </summary>
-        /// <typeparam name="T">The tpye of assets to search for</typeparam>
+        /// <typeparam name="T">The type of assets to search for</typeparam>
         /// <returns>Returns a collection of the instances of T that were found in the project</returns>
         public static List<T> GetAssetsOfType<T>() where T : UnityEngine.Object {
             // Find the GUIDs of all of the assets of the specified type
@@ -535,9 +599,39 @@ namespace MCU.Helpers {
         }
 
         /// <summary>
+        /// Retrieve all of the assets of the specified implementation type, cast to a specified base
+        /// </summary>
+        /// <typeparam name="TBase">The base type of the assets that the assets should be retrieved as</typeparam>
+        /// <param name="implementationType">The type of asset that is to be retrieved</param>
+        /// <returns>Returns a collection of the instances of implementationType that could be found</returns>
+        public static List<TBase> GetAssetsOfType<TBase>(Type implementationType) where TBase : UnityEngine.Object {
+            // Check that the implementation type can be cast to base
+            if (!typeof(TBase).IsAssignableFrom(implementationType))
+                return new List<TBase>();
+
+            // Find the GUIDs of all of the implementation type assets
+            string[] ids = AssetDatabase.FindAssets("t:" + implementationType.Name);
+
+            // Create a list to hold the found elements
+            List<TBase> found = new List<TBase>(ids.Length);
+
+            // Loop through and check all of the identified elements
+            TBase asset;
+            for (int i = 0; i < ids.Length; ++i) {
+                // Get the path of the object
+                string path = AssetDatabase.GUIDToAssetPath(ids[i]);
+
+                // Attempt to load the asset
+                if (asset = AssetDatabase.LoadAssetAtPath<TBase>(path))
+                    found.Add(asset);
+            }
+            return found;
+        }
+
+        /// <summary>
         /// Iterate over all assets of a specified type
         /// </summary>
-        /// <typeparam name="T">The tpye of assets to search for</typeparam>
+        /// <typeparam name="T">The type of assets to search for</typeparam>
         /// <returns>Iterates over all assets of the specified type that could be found</returns>
         public static IEnumerator<T> ForAssetsOfType<T>() where T : UnityEngine.Object {
             // Find the GUIDs of all of the assets of the specified type
@@ -551,6 +645,28 @@ namespace MCU.Helpers {
 
                 // Attempt to load the asset
                 if (asset = AssetDatabase.LoadAssetAtPath<T>(path))
+                    yield return asset;
+            }
+        }
+
+        /// <summary>
+        /// Iterate over all assets of a specified type, cast to a specified base
+        /// </summary>
+        /// <typeparam name="TBase">The base type of the assets that the assets should be retrieved as</typeparam>
+        /// <param name="implementationType">The type of asset that is to be retrieved</param>
+        /// <returns>Iterates over all assets of the specified type that could be found</returns>
+        public static IEnumerator<TBase> ForAssetsOfType<TBase>(Type implementationType) where TBase : UnityEngine.Object {
+            // Find the GUIDs of all of the assets of the specified type
+            string[] ids = AssetDatabase.FindAssets("t:" + implementationType.Name);
+
+            // Loop through and check all of the identified elements
+            TBase asset;
+            for (int i = 0; i < ids.Length; ++i) {
+                // Get the path of the object
+                string path = AssetDatabase.GUIDToAssetPath(ids[i]);
+
+                // Attempt to load the asset
+                if (asset = AssetDatabase.LoadAssetAtPath<TBase>(path))
                     yield return asset;
             }
         }
