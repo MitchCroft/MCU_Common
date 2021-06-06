@@ -1,5 +1,8 @@
 fileFormatVersion: 2
 guid: bd33d237297c9ab49b200a121f62ce19
+labels:
+- MCU
+- MCU_Common
 TextScriptImporter:
   externalObjects: {}
   userData: 
