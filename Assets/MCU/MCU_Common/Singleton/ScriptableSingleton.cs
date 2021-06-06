@@ -33,17 +33,20 @@ namespace MCU.Singleton {
                     // Find all of the instances in Resources
                     T[] assets = Resources.FindObjectsOfTypeAll<T>();
                     if (assets.Length > 0) {
-                        if (assets.Length > 1) Debug.LogWarning($"Multiple instances of {typeof(T).Name} found in resources. Using {assets[0]}...", assets[0]);
-                        instance = assets[0];
+                        // There shouldn't be more then one
+                        if (assets.Length > 1)
+                            Debug.LogWarning($"Multiple instances of {typeof(T).Name} found in resources. Using {assets[0]}...", assets[0]);
+
+                        // Store the reference to the asset that will be used
+                        if (typeof(T).GetCustomAttribute<DuplicateAssetAttribute>() != null)
+                            instance = Instantiate(assets[0]);
+                        else instance = assets[0];
                     }
 
                     // If none was found check to see if a default should be created
                     else {
-                        // Look for a CreateDefaultSingletonAttribute attribute to determine if a default asset should be created
-                        CreateDefaultSingletonAttribute defaultAtt = typeof(T).GetCustomAttribute<CreateDefaultSingletonAttribute>(true);
-
                         // Determine how no asset should be handled
-                        if (defaultAtt != null && defaultAtt.CreateDefault) {
+                        if (typeof(T).GetCustomAttribute<CreateDefaultSingletonAttribute>() != null) {
                             Debug.Log($"No Singleton asset of {typeof(T).Name} could be found in Resources. Creating a default...");
                             instance = ScriptableObject.CreateInstance<T>();
                         }

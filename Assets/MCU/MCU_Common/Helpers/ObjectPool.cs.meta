@@ -1,5 +1,8 @@
 fileFormatVersion: 2
 guid: 7fb448071372ae946a1d47f3656182a2
+labels:
+- MCU
+- MCU_Common
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2

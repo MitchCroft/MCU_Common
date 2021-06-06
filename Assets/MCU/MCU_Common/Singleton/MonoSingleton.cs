@@ -51,17 +51,16 @@ namespace MCU.Singleton {
                     // Look for an instance that can be used
                     T[] found = GameObject.FindObjectsOfType<T>();
                     if (found.Length > 0) {
-                        if (found.Length > 1) Debug.LogWarning($"Multiple instances of {typeof(T).Name} found in scene. Using {found[0]}...", found[0]);
+                        // There shouldn't be more then one
+                        if (found.Length > 1)
+                            Debug.LogWarning($"Multiple instances of {typeof(T).Name} found in scene. Using {found[0]}...", found[0]);
                         instance = found[0];
                     }
 
                     // Nothing found, check if we are making one
                     else if (!applicationHasQuit) {
-                        // Look for a CreateDefaultSingletonAttribute attribute to determine if a default asset should be created
-                        CreateDefaultSingletonAttribute defaultAtt = typeof(T).GetCustomAttribute<CreateDefaultSingletonAttribute>(true);
-
                         // Check if we are creating a new instance for use
-                        if (defaultAtt != null && defaultAtt.CreateDefault) {
+                        if (typeof(T).GetCustomAttribute<CreateDefaultSingletonAttribute>() != null) {
                             // Notify dev of operation
                             Debug.Log($"No Singleton object of {typeof(T).Name} could be found in scene. Creating a default...");
 
